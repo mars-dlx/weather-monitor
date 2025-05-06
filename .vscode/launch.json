@@ -1,0 +1,64 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run Dev (tsx watch)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      // "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"],
+      "autoAttachChildProcesses": true,
+      "restart": true,
+      "sourceMaps": true,
+      "stopOnEntry": false,
+    }
+  ]
+}
+
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//       {
+//         "name": "Debug API (dev)",
+//         "type": "node",
+//         "request": "launch",
+//         "runtimeExecutable": "npm",
+//         "runtimeArgs": ["run", "start:debug:vscode", "--", "--inspect-brk"],
+//         // "envFile": "${workspaceFolder}/.env",
+//         "cwd": "${workspaceFolder}",
+//         "console": "integratedTerminal",
+//         "skipFiles": ["<node_internals>/**"],
+//         "autoAttachChildProcesses": true,
+//         "restart": true,
+//         "sourceMaps": true,
+//         "stopOnEntry": false,
+//       },
+//       {
+//         "name": "Debug Socket-GW (dev)",
+//         "type": "node",
+//         "request": "launch",
+//         "runtimeExecutable": "npm",
+//         "runtimeArgs": ["run", "start:dev:socket-gw"],
+//         "envFile": "${workspaceFolder}/.env",
+//         "cwd": "${workspaceFolder}",
+//         "console": "integratedTerminal",
+//         "skipFiles": ["<node_internals>/**"],
+//       },
+//       {
+//         "name": "Debug Generic NestJS (--debug)",
+//         "type": "node",
+//         "request": "launch",
+//         "runtimeExecutable": "npm",
+//         "runtimeArgs": ["run", "start:debug"],
+//         "envFile": "${workspaceFolder}/.env",
+//         "cwd": "${workspaceFolder}",
+//         "console": "integratedTerminal",
+//         "autoAttachChildProcesses": true,
+//         "skipFiles": ["<node_internals>/**"]
+//       }
+//     ]
+//   }

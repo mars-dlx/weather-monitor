@@ -1,0 +1,44 @@
+{
+  "name": "weather-monitor",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "lint": "eslint 'src/**/*.ts' --fix",
+    "build": "tsc",
+    "start": "NODE_ENV=production node dist/index.js",
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MarS_DLX",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "@types/luxon": "^3.6.2",
+    "axios": "1.9.0",
+    "body-parser": "2.2.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "cors": "2.8.5",
+    "dotenv": "16.5.0",
+    "express": "5.1.0",
+    "luxon": "^3.6.1",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.1",
+    "@eslint/js": "9.26.0",
+    "@types/axios": "0.14.4",
+    "@types/cors": "2.8.17",
+    "@types/express": "5.0.1",
+    "@types/node": "22.15.12",
+    "@typescript-eslint/eslint-plugin": "8.32.0",
+    "@typescript-eslint/parser": "8.32.0",
+    "eslint": "9.26.0",
+    "eslint-config-prettier": "10.1.2",
+    "eslint-plugin-prettier": "5.4.0",
+    "globals": "16.0.0",
+    "prettier": "3.5.3",
+    "tsx": "4.19.4",
+    "typescript": "5.8.3"
+  }
+}
