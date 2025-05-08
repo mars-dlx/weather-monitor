@@ -36,7 +36,7 @@ export default function App() {
 
   const handleSubmit = () => {
     setSearchParams({ ...form });
-    void fetchForecast(getForecastParams(searchParams));
+    void fetchForecast(form);
   };
 
   return (
