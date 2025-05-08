@@ -8,21 +8,27 @@ import {
 } from 'class-validator';
 import { Type, plainToInstance, Expose, Transform } from 'class-transformer';
 import { DateTime } from 'luxon';
-
-const EMAIL = 'a8143@ya.ru';
+import { CACHE_TTL, YR_NO_API_URL, YR_NO_USER_EMAIL } from './config';
 
 const weatherServiceApi = new axios.Axios({
-  baseURL: 'https://api.met.no/weatherapi/locationforecast/2.0/',
+  baseURL: YR_NO_API_URL,
   headers: {
-    'user-agent': `weather-monitor ${EMAIL}`,
+    'user-agent': `weather-monitor: ${YR_NO_USER_EMAIL}`,
   },
 });
 
-export class WeatherApiResponse {
-  @ValidateNested()
-  @Type(() => Properties)
+export class TimeSeriesEntry {
+  @IsDate()
+  @Transform(({ value }) => DateTime.fromISO(value))
   @Expose()
-  properties!: Properties;
+  time!: DateTime;
+
+  @Expose({ name: 'data' })
+  @Transform((obj) => obj.obj?.data?.instant?.details?.air_temperature, {
+    toClassOnly: true,
+  })
+  @IsNumber()
+  temperature?: number;
 }
 
 export class Properties {
@@ -33,25 +39,18 @@ export class Properties {
   timeseries!: TimeSeriesEntry[];
 
   @Expose({ name: 'meta' })
-  @Transform((obj) => obj.value.units.air_temperature, {
+  @Transform((obj) => obj.obj?.meta?.units?.air_temperature, {
     toClassOnly: true,
   })
   @IsString()
-  temperature_units!: TimeSeriesEntry[];
+  temperature_units?: string;
 }
 
-export class TimeSeriesEntry {
-  @IsDate()
-  @Transform(({ value }) => DateTime.fromISO(value))
+export class WeatherApiResponse {
+  @ValidateNested()
+  @Type(() => Properties)
   @Expose()
-  time!: DateTime;
-
-  @Expose({ name: 'data' })
-  @Transform((obj) => obj.value.instant.details.air_temperature, {
-    toClassOnly: true,
-  })
-  @IsNumber()
-  temperature!: number;
+  properties!: Properties;
 }
 
 export interface WeatherItem {
@@ -59,29 +58,58 @@ export interface WeatherItem {
   temperature: number;
 }
 
-export async function getWeatherByCoordinates(
+export interface Forecast {
+  metadata: {
+    location: { lat: string; lon: string };
+    timezone: string;
+    target_hour: number;
+    temperature_units: string | null;
+  };
+  forecast: WeatherItem[];
+}
+
+const forecastCache = new Map<string, [WeatherApiResponse, number]>();
+
+function getCacheKey(lat: string, lon: string): string {
+  const roundedLat = Math.round(parseFloat(lat) * 10) / 10;
+  const roundedLon = Math.round(parseFloat(lon) * 10) / 10;
+  return `${roundedLat}---${roundedLon}`;
+}
+
+export async function getForecastByCoordinates(
   lat: string,
   lon: string,
   timezone: string,
   target_hour: number,
-) {
-  const response = await weatherServiceApi.get('compact', {
-    params: { lat, lon },
-  });
+): Promise<Forecast> {
+  const cacheKey = getCacheKey(lat, lon);
 
-  // const errors = await validate(WeatherApiResponse, JSON.parse(response.data));
-  const parsed = plainToInstance(
-    WeatherApiResponse,
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    JSON.parse(response.data as string),
-    {
-      enableImplicitConversion: true,
-      excludeExtraneousValues: true,
-    },
-  );
+  const cache = forecastCache.get(cacheKey);
+  let parsedResponse = cache?.[0];
+
+  if (!cache || !parsedResponse || Date.now() - cache[1] > CACHE_TTL) {
+    console.log(`Requesting weather from yt.no for lat: ${lat} lon: ${lon}`);
+
+    const response = await weatherServiceApi.get('compact', {
+      params: { lat, lon },
+    });
+
+    parsedResponse = plainToInstance(
+      WeatherApiResponse,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      JSON.parse(response.data as string),
+      {
+        enableImplicitConversion: true,
+        excludeExtraneousValues: true,
+      },
+    );
+    forecastCache.set(cacheKey, [parsedResponse, Date.now()]);
+  } else {
+    console.log(`Used cached value for lat: ${lat} lon: ${lon}`);
+  }
 
   const forecast = extractDailyTemperature(
-    parsed.properties.timeseries,
+    parsedResponse.properties.timeseries,
     timezone,
     target_hour,
   );
@@ -91,7 +119,7 @@ export async function getWeatherByCoordinates(
       location: { lat, lon },
       timezone,
       target_hour,
-      temperature_units: parsed.properties.temperature_units,
+      temperature_units: parsedResponse.properties.temperature_units ?? null,
     },
     forecast,
   };
@@ -104,7 +132,10 @@ function extractDailyTemperature(
 ): WeatherItem[] {
   return timeseries
     .filter(
-      ({ time }) => time.isValid && time.setZone(timezone).hour === target_hour,
+      (ts): ts is Required<WeatherItem> =>
+        ts.time.isValid &&
+        ts.time.setZone(timezone).hour === target_hour &&
+        Boolean(ts.temperature),
     )
     .map(({ time, temperature }) => ({
       time: time.setZone(timezone),

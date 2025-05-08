@@ -6,6 +6,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import js from '@eslint/js';
 import { FlatCompat } from '@eslint/eslintrc';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import reactX from 'eslint-plugin-react-x';
+import reactDom from 'eslint-plugin-react-dom';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +26,7 @@ export default [
     'prettier',
   ),
   {
+    files: ['**/*.{js,mjs,ts,tsx}'],
     plugins: {
       '@typescript-eslint': typescriptEslint,
       prettier,
@@ -36,7 +41,6 @@ export default [
       },
 
       globals: {
-        ...globals.browser,
         ...globals.node,
       },
 
@@ -82,6 +86,33 @@ export default [
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off', // false-positive
+    },
+  },
+  {
+    files: ['web/**/*.{js,mjs,ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir: path.join(import.meta.dirname, 'web'),
+      },
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+      'react-x': reactX,
+      'react-dom': reactDom,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      ...reactX.configs['recommended-typescript'].rules,
+      ...reactDom.configs.recommended.rules,
+      'react-refresh/only-export-components': [
+        'error',
+        { allowConstantExport: true },
+      ],
     },
   },
 ];
