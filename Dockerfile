@@ -5,8 +5,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY eslint.config.mjs ./
+COPY vite.config.ts ./
 COPY .prettierrc ./
-COPY ./src ./src
+COPY ./api ./api
 COPY ./web ./web
 
 RUN npm install
@@ -27,4 +28,4 @@ COPY --from=builder /app/package*.json ./
 RUN npm install --omit=dev
 
 ENV NODE_ENV=production
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/api/src/index.js"]

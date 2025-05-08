@@ -20,6 +20,14 @@ const compat = new FlatCompat({
 });
 
 export default [
+  {
+    ignores: [
+      '**/node_modules/*',
+      '**/dist/*',
+      '**/.vscode/*',
+      'vite.config.ts',
+    ],
+  },
   ...compat.extends(
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended-type-checked',

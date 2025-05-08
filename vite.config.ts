@@ -1,7 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dotenv from 'dotenv';
-dotenv.config({ path: '..' });
+dotenv.config();
+
+import path from 'path'
+import { PORT } from './api/src/config'
+
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,13 +14,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/weather': {
-        target: 'http://localhost:50000',
+        target: `http://localhost:${PORT}`,
         changeOrigin: true,
       },
     },
   },
   build: {
-    outDir: '../dist/web',
-
+    outDir: path.resolve(__dirname, 'dist/web'),
   },
 });

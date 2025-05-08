@@ -14,14 +14,14 @@ import { PORT } from './config';
 const app = express();
 
 const sendIndex = (_req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../dist/web/index.html'));
+  res.sendFile(path.resolve(__dirname, '../../web/index.html'));
 };
 
 app
   .disable('x-powered-by')
   .use(cors())
   .use(express.json())
-  .use(express.static(path.join(__dirname, '../dist/web/')))
+  .use(express.static(path.resolve(__dirname, '../../web/')))
   .get('/', sendIndex)
   .get(
     '/weather',
@@ -47,7 +47,7 @@ app
         res.json(forecast);
       } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Error retrieving weather data' });
+        res.status(500).json({ error: 'Error retrieving weather data' });
       }
     },
   );

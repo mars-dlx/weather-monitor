@@ -1,16 +1,16 @@
 {
   "name": "weather-monitor",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "main": "api/src/index.ts",
   "scripts": {
-    "lint": "eslint 'src/**/*.ts' --fix",
+    "lint": "eslint --fix",
     "build": "tsc",
-    "start": "NODE_ENV=production node dist/index.js",
-    "dev": "tsx watch --env-file=.env src/index.ts",
+    "start": "NODE_ENV=production node dist/api/src/index.js",
+    "dev": "tsx watch --env-file=.env api/src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "web:dev": "vite --config web/vite.config.ts",
-    "web:build": "tsc -b web/tsconfig.app.json && vite build --config web/vite.config.ts",
-    "web:preview": "vite preview --config web/vite.config.ts"
+    "web:dev": "vite --config vite.config.ts",
+    "web:build": "tsc -b web/tsconfig.json && vite build --config vite.config.ts",
+    "web:preview": "vite preview --config vite.config.ts"
   },
   "author": "MarS_DLX",
   "license": "MIT",
