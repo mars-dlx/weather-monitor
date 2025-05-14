@@ -4,6 +4,7 @@
   "main": "api/src/index.ts",
   "scripts": {
     "lint": "eslint --fix",
+    "prebuild": "sh prebuild.sh",
     "build": "tsc",
     "start": "NODE_ENV=production node dist/api/src/index.js",
     "dev": "tsx watch --env-file=.env api/src/index.ts",

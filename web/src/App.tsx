@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './App.css';
 import { useForecast } from './hooks/useForecast';
+import { useAPIVersion } from './hooks/useAPIVersion';
+import webVersion from '../../version.json';
 
 const DEFAULT_PARAMS: ForecastParams = {
   lat: '44.7866',
@@ -17,6 +19,15 @@ export interface ForecastParams {
   target_hour: string;
 }
 
+function formatTimestamp(unixTimestamp: string | null): string {
+  if (!unixTimestamp) {
+    return 'none';
+  }
+
+  const date = new Date(Number(unixTimestamp) * 1000);
+  return date.toLocaleString();
+}
+
 function getForecastParams(searchParams: URLSearchParams): ForecastParams {
   return {
     lat: searchParams.get('lat') ?? '',
@@ -27,6 +38,8 @@ function getForecastParams(searchParams: URLSearchParams): ForecastParams {
 }
 
 export default function App() {
+  const apiVersion = useAPIVersion();
+
   const [searchParams, setSearchParams] = useSearchParams({
     ...DEFAULT_PARAMS,
   });
@@ -111,6 +124,16 @@ export default function App() {
           )}
         </div>
       )}
+      <div className="footer-version">
+        <div className="version-block">
+          <strong>Web</strong> version: {webVersion.version}, built:{' '}
+          {formatTimestamp(webVersion.build_date)}
+        </div>
+        <div className="version-block">
+          <strong>API</strong> version: {apiVersion?.version ?? 'loading...'},
+          built: {formatTimestamp(apiVersion?.build_date ?? null)}
+        </div>
+      </div>
     </main>
   );
 }

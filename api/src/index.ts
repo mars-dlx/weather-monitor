@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -10,6 +11,12 @@ import { getForecastByCoordinates } from './weather.service';
 import { validateWeatherQuery } from './middlewares/validateWeatherQuery';
 import { redirectIfMissingQueryParams } from './middlewares/redirectIfMissingQueryParams';
 import { PORT } from './config';
+
+const version = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../../version.json'), {
+    encoding: 'utf8',
+  }),
+);
 
 const app = express();
 
@@ -24,7 +31,7 @@ app
   .use(express.static(path.resolve(__dirname, '../../web/')))
   .get('/', sendIndex)
   .get(
-    '/weather',
+    '/api/weather',
     validateWeatherQuery,
     redirectIfMissingQueryParams,
     async (req: Request, res: Response) => {
@@ -50,7 +57,10 @@ app
         res.status(500).json({ error: 'Error retrieving weather data' });
       }
     },
-  );
+  )
+  .get('/api/health', (_req: Request, res: Response) => {
+    res.status(200).json({ ...version, status: 'ok' });
+  });
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

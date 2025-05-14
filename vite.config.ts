@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/weather': {
+      '/api': {
         target: `http://localhost:${PORT}`,
         changeOrigin: true,
       },
