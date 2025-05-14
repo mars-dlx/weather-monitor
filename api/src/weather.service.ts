@@ -180,11 +180,11 @@ function addMissedValues(timeseries: TimeSeriesEntry[]) {
     ) {
       const time = DateTime.fromMillis(missedTimestamp);
       const temperature = interpolateLinear(
-        currentTs.time.hour,
-        nextTs.time.hour,
+        currentTsTimestamp,
+        nextTsTimestamp,
         currentTs.temperature,
         nextTs.temperature,
-        time.hour,
+        missedTimestamp,
       );
 
       result.push({
