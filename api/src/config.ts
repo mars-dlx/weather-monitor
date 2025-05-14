@@ -10,6 +10,7 @@ export const DEFAULT_TIMEZONE =
 export const DEFAULT_TARGET_HOUR = process.env['DEFAULT_TARGET_HOUR'] ?? '14';
 
 export const CACHE_TTL = Number(process.env['CACHE_TTL']) || 30 * 60 * 1000;
+export const CACHE_SIZE = Number(process.env['CACHE_SIZE']) || 1000;
 export const YR_NO_USER_EMAIL =
   process.env['YR_NO_USER_EMAIL'] ?? 'your-email@example.com';
 export const YR_NO_API_URL =

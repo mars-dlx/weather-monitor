@@ -6,10 +6,10 @@ import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { getForecastByCoordinates } from './weather.service';
 import { validateWeatherQuery } from './middlewares/validateWeatherQuery';
-import { redirectIfMissingQueryParams } from './middlewares/redirectIfMissingQueryParams';
 import { PORT } from './config';
+import { getHealth } from './actions/getHealth';
+import { getWeather } from './actions/getWeather';
 
 const app = express();
 
@@ -23,34 +23,8 @@ app
   .use(express.json())
   .use(express.static(path.resolve(__dirname, '../../web/')))
   .get('/', sendIndex)
-  .get(
-    '/weather',
-    validateWeatherQuery,
-    redirectIfMissingQueryParams,
-    async (req: Request, res: Response) => {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      const { lat, lon, timezone, target_hour } = req.query as {
-        lat: string;
-        lon: string;
-        timezone: string;
-        target_hour: string;
-      };
-
-      try {
-        const forecast = await getForecastByCoordinates(
-          lat,
-          lon,
-          timezone,
-          parseInt(target_hour, 10),
-        );
-
-        res.json(forecast);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error retrieving weather data' });
-      }
-    },
-  );
+  .get('/api/weather', validateWeatherQuery, getWeather)
+  .get('/api/health', getHealth);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

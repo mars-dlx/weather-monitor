@@ -34,7 +34,7 @@ export function useForecast() {
       setError(null);
 
       const query = new URLSearchParams({ ...params }).toString();
-      const res = await fetch(`/weather?${query}`);
+      const res = await fetch(`/api/weather?${query}`);
 
       if (!res.ok) {
         throw new Error('Request failed: ' + (await res.json()).error);

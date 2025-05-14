@@ -14,6 +14,8 @@ export function validateWeatherQuery(
       res.status(400).json({ error: 'Invalid lat' });
       return;
     }
+  } else {
+    res.status(400).json({ error: 'Invalid lat' });
   }
 
   if (typeof lon === 'string') {
@@ -22,6 +24,8 @@ export function validateWeatherQuery(
       res.status(400).json({ error: 'Invalid lon' });
       return;
     }
+  } else {
+    res.status(400).json({ error: 'Invalid lon' });
   }
 
   if (typeof target_hour === 'string') {
@@ -34,6 +38,8 @@ export function validateWeatherQuery(
       res.status(400).json({ error: 'Invalid target_hour' });
       return;
     }
+  } else {
+    res.status(400).json({ error: 'Invalid target_hour' });
   }
 
   if (typeof timezone === 'string') {
@@ -41,6 +47,8 @@ export function validateWeatherQuery(
       res.status(400).json({ error: 'Invalid timezone' });
       return;
     }
+  } else {
+    res.status(400).json({ error: 'Invalid timezone' });
   }
 
   next();

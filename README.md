@@ -8,7 +8,7 @@ Weather Monitor is a lightweight service built with TypeScript and Express that 
 - 🌍 Custom location support via latitude/longitude
 - 🕑 Temperature forecast for ~14:00 local time or any specified hour
 - ⚡ Caching to prevent excessive API usage
-- 🧰 REST API with optional web interface
+- 🧰 REST API with Web interface
 - 🐳 Docker-ready for easy deployment
 
 ## Technologies
@@ -54,7 +54,7 @@ npm start
 
 ---
 
-## Web UI (Optional)
+## Web UI
 
 To launch the browser UI:
 
@@ -86,7 +86,7 @@ docker run -p 50000:50000 --env-file .env weather-monitor
 
 ## API Reference
 
-### `GET /weather`
+### `GET /api/weather`
 
 Returns a forecast of daily temperatures around a specified hour (default is 14:00) for a given location.
 

@@ -8,7 +8,11 @@ import {
 } from 'class-validator';
 import { Type, plainToInstance, Expose, Transform } from 'class-transformer';
 import { DateTime } from 'luxon';
-import { CACHE_TTL, YR_NO_API_URL, YR_NO_USER_EMAIL } from './config';
+import { YR_NO_API_URL, YR_NO_USER_EMAIL } from './config';
+import { InMemoryCache } from './cache/InMemoryCache';
+import { interpolateLinear } from './math/interpolateLinear';
+
+const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 const weatherServiceApi = new axios.Axios({
   baseURL: YR_NO_API_URL,
@@ -28,7 +32,7 @@ export class TimeSeriesEntry {
     toClassOnly: true,
   })
   @IsNumber()
-  temperature?: number;
+  temperature!: number;
 }
 
 export class Properties {
@@ -68,7 +72,7 @@ export interface Forecast {
   forecast: WeatherItem[];
 }
 
-const forecastCache = new Map<string, [WeatherApiResponse, number]>();
+const forecastCache = new InMemoryCache<WeatherApiResponse>();
 
 function getCacheKey(lat: string, lon: string): string {
   const roundedLat = Math.round(parseFloat(lat) * 10) / 10;
@@ -84,17 +88,16 @@ export async function getForecastByCoordinates(
 ): Promise<Forecast> {
   const cacheKey = getCacheKey(lat, lon);
 
-  const cache = forecastCache.get(cacheKey);
-  let parsedResponse = cache?.[0];
+  let parsedResponse = forecastCache.get(cacheKey);
 
-  if (!cache || !parsedResponse || Date.now() - cache[1] > CACHE_TTL) {
+  if (!parsedResponse) {
     console.log(`Requesting weather from yt.no for lat: ${lat} lon: ${lon}`);
 
     const response = await weatherServiceApi.get('compact', {
       params: { lat, lon },
     });
 
-    parsedResponse = plainToInstance(
+    const rawParsedResponse = plainToInstance(
       WeatherApiResponse,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       JSON.parse(response.data as string),
@@ -103,7 +106,16 @@ export async function getForecastByCoordinates(
         excludeExtraneousValues: true,
       },
     );
-    forecastCache.set(cacheKey, [parsedResponse, Date.now()]);
+
+    parsedResponse = {
+      ...rawParsedResponse,
+      properties: {
+        ...rawParsedResponse.properties,
+        timeseries: addMissedValues(rawParsedResponse.properties.timeseries),
+      },
+    };
+
+    forecastCache.set(cacheKey, parsedResponse);
   } else {
     console.log(`Used cached value for lat: ${lat} lon: ${lon}`);
   }
@@ -132,13 +144,55 @@ function extractDailyTemperature(
 ): WeatherItem[] {
   return timeseries
     .filter(
-      (ts): ts is Required<WeatherItem> =>
-        ts.time.isValid &&
-        ts.time.setZone(timezone).hour === target_hour &&
-        Boolean(ts.temperature),
+      (ts) => ts.time.isValid && ts.time.setZone(timezone).hour === target_hour,
     )
     .map(({ time, temperature }) => ({
       time: time.setZone(timezone),
       temperature,
     }));
+}
+
+function addMissedValues(timeseries: TimeSeriesEntry[]) {
+  if (!timeseries.length) {
+    return timeseries;
+  }
+
+  const result: TimeSeriesEntry[] = [];
+
+  for (let i = 0; i < timeseries.length; i++) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const currentTs = timeseries[i]!;
+    result.push(currentTs);
+
+    const nextTs = timeseries[i + 1];
+
+    if (!nextTs) continue;
+
+    const currentTsTimestamp = currentTs.time.toMillis();
+    const nextTsTimestamp = nextTs.time.toMillis();
+
+    if (nextTsTimestamp - currentTsTimestamp <= ONE_HOUR_IN_MS) continue;
+
+    for (
+      let missedTimestamp = currentTsTimestamp + ONE_HOUR_IN_MS;
+      nextTsTimestamp - missedTimestamp >= ONE_HOUR_IN_MS;
+      missedTimestamp += ONE_HOUR_IN_MS
+    ) {
+      const time = DateTime.fromMillis(missedTimestamp);
+      const temperature = interpolateLinear(
+        currentTsTimestamp,
+        nextTsTimestamp,
+        currentTs.temperature,
+        nextTs.temperature,
+        missedTimestamp,
+      );
+
+      result.push({
+        time,
+        temperature: Math.round(temperature * 10) / 10,
+      });
+    }
+  }
+
+  return result;
 }
