@@ -8,7 +8,8 @@ import {
 } from 'class-validator';
 import { Type, plainToInstance, Expose, Transform } from 'class-transformer';
 import { DateTime } from 'luxon';
-import { CACHE_TTL, YR_NO_API_URL, YR_NO_USER_EMAIL } from './config';
+import { YR_NO_API_URL, YR_NO_USER_EMAIL } from './config';
+import { InMemoryCache } from './cache/InMemoryCache';
 
 const weatherServiceApi = new axios.Axios({
   baseURL: YR_NO_API_URL,
@@ -68,7 +69,7 @@ export interface Forecast {
   forecast: WeatherItem[];
 }
 
-const forecastCache = new Map<string, [WeatherApiResponse, number]>();
+const forecastCache = new InMemoryCache<WeatherApiResponse>();
 
 function getCacheKey(lat: string, lon: string): string {
   const roundedLat = Math.round(parseFloat(lat) * 10) / 10;
@@ -84,10 +85,9 @@ export async function getForecastByCoordinates(
 ): Promise<Forecast> {
   const cacheKey = getCacheKey(lat, lon);
 
-  const cache = forecastCache.get(cacheKey);
-  let parsedResponse = cache?.[0];
+  let parsedResponse = forecastCache.get(cacheKey);
 
-  if (!cache || !parsedResponse || Date.now() - cache[1] > CACHE_TTL) {
+  if (!parsedResponse) {
     console.log(`Requesting weather from yt.no for lat: ${lat} lon: ${lon}`);
 
     const response = await weatherServiceApi.get('compact', {
@@ -103,7 +103,7 @@ export async function getForecastByCoordinates(
         excludeExtraneousValues: true,
       },
     );
-    forecastCache.set(cacheKey, [parsedResponse, Date.now()]);
+    forecastCache.set(cacheKey, parsedResponse);
   } else {
     console.log(`Used cached value for lat: ${lat} lon: ${lon}`);
   }
